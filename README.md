@@ -1,2 +1,2 @@
 # bstu-fit-6semestr
-see branches!
+**look at the branches!**
