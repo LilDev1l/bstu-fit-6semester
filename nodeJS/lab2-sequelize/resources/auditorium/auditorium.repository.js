@@ -1,5 +1,5 @@
 const {sequelize} = require('../../db');
-const {Sequelize, Transaction} = require('sequelize');
+const {Transaction} = require('sequelize');
 const {Auditorium} = sequelize.models;
 
 async function getAll() {
@@ -24,12 +24,12 @@ async function getAllMore60() {
 }
 
 async function startTransaction() {
-    const t = await sequelize.transaction({isolationLevel: Transaction.ISOLATION_LEVELS.READ_UNCOMMITTED})
+    const t = await sequelize.transaction({isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED})
     await Auditorium.update({auditorium_capacity: 0}, {transaction: t, where: {}});
 
     setTimeout(() => {
         t.rollback();
-    }, 1_000);
+    }, 10_000);
 
     return '-- start transaction';
 }
