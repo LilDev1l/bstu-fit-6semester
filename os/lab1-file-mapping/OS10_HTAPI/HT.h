@@ -117,4 +117,14 @@ namespace ht    // HT API
 
 	void CALLBACK snapAsync(LPVOID prm, DWORD, DWORD);
 	const char* writeLastError(HtHandle* const htHandle, const char* msg);
+
+	HtHandle* createHt(
+		int	  capacity,					// емкость хранилища
+		int   secSnapshotInterval,		// переодичность сохранения в сек.
+		int   maxKeyLength,             // максимальный размер ключа
+		int   maxPayloadLength,			// максимальный размер данных
+		const wchar_t* fileName);		// имя файла 
+	HtHandle* openHtFromFile(const wchar_t* fileName);
+	HtHandle* openHtFromMapName(const wchar_t* fileName);
+	BOOL runSnapshotTimer(HtHandle* htHandle);
 };

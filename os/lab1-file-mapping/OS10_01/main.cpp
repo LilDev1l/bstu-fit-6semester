@@ -17,7 +17,7 @@ int main()
 			cout << "-- insert: success" << endl;
 		else
 			throw "-- insert: error";
-	
+
 		ht::Element* hte = ht::get(ht, new ht::Element("key", 4));
 		if (hte)
 			cout << "-- get: success" << endl;

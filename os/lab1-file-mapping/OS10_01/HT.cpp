@@ -1,10 +1,8 @@
 #include "HT.h"
 
-#define SECOND 10000000
-
 namespace ht
 {
-	HtHandle::HtHandle() 
+	HtHandle::HtHandle()
 	{
 		this->capacity = 0;
 		this->secSnapshotInterval = 0;
@@ -14,7 +12,7 @@ namespace ht
 		this->file = NULL;
 		this->fileMapping = NULL;
 		this->addr = NULL;
-		ZeroMemory(this->lastErrorMessage, sizeof(this->lastErrorMessage));  
+		ZeroMemory(this->lastErrorMessage, sizeof(this->lastErrorMessage));
 		this->lastSnaptime = 0;
 
 		this->count = 0;
@@ -34,7 +32,20 @@ namespace ht
 		int   secSnapshotInterval,		// переодичность сохранения в сек.
 		int   maxKeyLength,             // максимальный размер ключа
 		int   maxPayloadLength,			// максимальный размер данных
-		const wchar_t* fileName)				// имя файла 
+		const wchar_t* fileName)		// имя файла 
+	{
+		HtHandle* htHandle = createHt(capacity, secSnapshotInterval, maxKeyLength, maxPayloadLength, fileName);
+		runSnapshotTimer(htHandle);
+
+		return htHandle;
+	}
+
+	HtHandle* createHt(
+		int	  capacity,					// емкость хранилища
+		int   secSnapshotInterval,		// переодичность сохранения в сек.
+		int   maxKeyLength,             // максимальный размер ключа
+		int   maxPayloadLength,			// максимальный размер данных
+		const wchar_t* fileName)		// имя файла 
 	{
 		HANDLE hf = CreateFile(
 			fileName,
@@ -46,28 +57,26 @@ namespace ht
 			NULL);
 		if (hf == INVALID_HANDLE_VALUE)
 			throw "create or open file failed";
-		std::cout << "-- create file or open succesfull" << std::endl;
 
-		int htSize = sizeof(HtHandle) + getSizeElement(maxKeyLength, maxPayloadLength) * capacity;
+		int sizeMap = sizeof(HtHandle) + getSizeElement(maxKeyLength, maxPayloadLength) * capacity;
 		HANDLE hm = CreateFileMapping(
 			hf,
 			NULL,
 			PAGE_READWRITE,
-			0, htSize,
+			0, sizeMap,
 			fileName);
 		if (!hm)
 			throw "create File Mapping failed";
-		std::cout << "-- create File Mapping succesful" << std::endl;
 
 		LPVOID lp = MapViewOfFile(
 			hm,
 			FILE_MAP_ALL_ACCESS,
 			0, 0, 0);
 		if (!lp)
-			throw "mapping view failed";
-		std::cout << "-- mapping view succesfull" << std::endl;
+			return NULL;
 
-		ZeroMemory(lp, htSize);
+		ZeroMemory(lp, sizeMap);
+
 		HtHandle* htHandle = new(lp) HtHandle(capacity, secSnapshotInterval, maxKeyLength, maxPayloadLength, fileName);
 		htHandle->file = hf;
 		htHandle->fileMapping = hm;
@@ -76,12 +85,7 @@ namespace ht
 		htHandle->mutex = CreateMutex(
 			NULL,
 			FALSE,
-			L"mutex");
-
-		htHandle->snapshotTimer = CreateWaitableTimer(0, FALSE, 0);
-		LARGE_INTEGER Li{};
-		Li.QuadPart = -(SECOND * htHandle->secSnapshotInterval);
-		SetWaitableTimer(htHandle->snapshotTimer, &Li, 1, snapAsync, htHandle, FALSE);
+			fileName);
 
 		return htHandle;
 	}
@@ -97,30 +101,120 @@ namespace ht
 	(
 		const wchar_t* fileName)         // имя файла
 	{
+		HtHandle* htHandle = openHtFromFile(fileName);
+		if (htHandle == NULL)
+		{
+			htHandle = openHtFromMapName(fileName);
+			if (htHandle == NULL)
+				return NULL;
+		}
+
+		runSnapshotTimer(htHandle);
+
+		return htHandle;
+	}
+
+	HtHandle* openHtFromFile(
+		const wchar_t* fileName)
+	{
+		HANDLE hf = CreateFile(
+			fileName,
+			GENERIC_WRITE | GENERIC_READ,
+			NULL,
+			NULL,
+			OPEN_ALWAYS,
+			FILE_ATTRIBUTE_NORMAL,
+			NULL);
+		if (hf == INVALID_HANDLE_VALUE)
+			return NULL;
+
 		HANDLE hm = CreateFileMapping(
-			INVALID_HANDLE_VALUE,
+			hf,
 			NULL,
 			PAGE_READWRITE,
 			0, 0,
 			fileName);
 		if (!hm)
-			throw "create File Mapping failed";
-		std::cout << "-- create File Mapping succesful" << std::endl;
+			return NULL;
 
 		LPVOID lp = MapViewOfFile(
 			hm,
 			FILE_MAP_ALL_ACCESS,
 			0, 0, 0);
 		if (!lp)
-			throw "mapping view failed";
-		std::cout << "-- mapping view succesfull" << std::endl;
+			return NULL;
 
 		HtHandle* htHandle = (HtHandle*)lp;
+		htHandle->file = hf;
 		htHandle->fileMapping = hm;
 		htHandle->addr = lp;
 		htHandle->lastSnaptime = time(NULL);
 
 		return htHandle;
+	}
+
+	HtHandle* openHtFromMapName(
+		const wchar_t* fileName)
+	{
+		HANDLE hm = CreateFileMapping(
+			INVALID_HANDLE_VALUE,
+			NULL,
+			PAGE_READWRITE,
+			0, sizeof(HtHandle),
+			fileName);
+		if (!hm)
+			return NULL;
+
+		LPVOID lp = MapViewOfFile(
+			hm,
+			FILE_MAP_ALL_ACCESS,
+			0, 0, 0);
+		if (!lp)
+			return NULL;
+
+		HtHandle* htHandle = (HtHandle*)lp;
+
+		int sizeMapping = sizeof(HtHandle) + getSizeElement(htHandle->maxKeyLength, htHandle->maxPayloadLength) * htHandle->capacity;
+
+		if (!UnmapViewOfFile(lp))
+			return NULL;
+		if (!CloseHandle(hm))
+			return NULL;
+
+		hm = CreateFileMapping(
+			INVALID_HANDLE_VALUE,
+			NULL,
+			PAGE_READWRITE,
+			0, sizeMapping,
+			fileName);
+		if (!hm)
+			return NULL;
+
+		lp = MapViewOfFile(
+			hm,
+			FILE_MAP_ALL_ACCESS,
+			0, 0, 0);
+		if (!lp)
+			return NULL;
+
+		htHandle = new HtHandle();
+		memcpy(htHandle, lp, sizeof(HtHandle));
+		htHandle->file = NULL;
+		htHandle->fileMapping = hm;
+		htHandle->addr = lp;
+		htHandle->lastSnaptime = time(NULL);
+
+		return htHandle;
+	}
+
+	BOOL runSnapshotTimer(HtHandle* htHandle)
+	{
+		htHandle->snapshotTimer = CreateWaitableTimer(0, FALSE, 0);
+		LARGE_INTEGER Li{};
+		Li.QuadPart = -(SECOND * htHandle->secSnapshotInterval);
+		SetWaitableTimer(htHandle->snapshotTimer, &Li, 1, snapAsync, htHandle, FALSE);
+
+		return true;
 	}
 
 	Element* get     //  читать элемент из хранилища
@@ -153,7 +247,7 @@ namespace ht
 		}
 
 		WaitForSingleObject(htHandle->mutex, INFINITE);
-		int freeIndex = findFreeIndex(htHandle, element);		
+		int freeIndex = findFreeIndex(htHandle, element);
 
 		writeToMemory(htHandle, element, freeIndex);
 		incrementCount(htHandle);
@@ -227,8 +321,8 @@ namespace ht
 	{
 		std::cout << "Element:" << std::endl;
 		std::cout << "{" << std::endl;
-		std::cout << "\t\"key\": \"" << (char*)element->key << "\"," << std::endl; 
-		std::cout << "\t\"keyLength\": " << element->keyLength << "," << std::endl; 
+		std::cout << "\t\"key\": \"" << (char*)element->key << "\"," << std::endl;
+		std::cout << "\t\"keyLength\": " << element->keyLength << "," << std::endl;
 		std::cout << "\t\"payload\": \"" << (char*)element->payload << "\"," << std::endl;
 		std::cout << "\t\"payloadLength\": " << element->payloadLength << std::endl;
 		std::cout << "}" << std::endl;
@@ -247,8 +341,9 @@ namespace ht
 			throw "unmapping view failed";
 		if (!CloseHandle(hfm))
 			throw "close File Mapping failed";
-		if (!CloseHandle(hf))
-			throw "close File failed";
+		if (hf != NULL)
+			if (!CloseHandle(hf))
+				throw "close File failed";
 
 		return true;
 	}
@@ -319,7 +414,7 @@ namespace ht
 	{
 		LPVOID lp = htHandle->addr;
 
-		lp = (HtHandle*)lp + 1;	
+		lp = (HtHandle*)lp + 1;
 		lp = (byte*)lp + getSizeElement(htHandle->maxKeyLength, htHandle->maxPayloadLength) * index;
 
 		memcpy(lp, element->key, element->keyLength);
