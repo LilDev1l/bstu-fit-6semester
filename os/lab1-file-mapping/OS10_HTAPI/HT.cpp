@@ -250,6 +250,8 @@ namespace ht
 
 		WaitForSingleObject(htHandle->mutex, INFINITE);
 		int freeIndex = findFreeIndex(htHandle, element);
+		if (freeIndex < 0)
+			return false;
 
 		writeToMemory(htHandle, element, freeIndex);
 		incrementCount(htHandle);
@@ -372,7 +374,8 @@ namespace ht
 		Element* foundElement = new Element();
 		do
 		{
-			if (index >= htHandle->capacity)
+			if (index >= htHandle->capacity || 
+				foundElement->key != NULL && memcmp(foundElement->key, element->key, element->keyLength) == NULL)
 			{
 				index = -1;
 				break;

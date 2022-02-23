@@ -32,4 +32,27 @@ namespace tests
 
 		return true;
 	}
+
+	BOOL test3(ht::HtHandle* htHandle)
+	{
+		ht::Element* element = new ht::Element("test3", 6, "test3", 6);
+
+		ht::insert(htHandle, element);
+		if (ht::insert(htHandle, element))
+			return false;
+
+		return true;
+	}
+
+	BOOL test4(ht::HtHandle* htHandle)
+	{
+		ht::Element* element = new ht::Element("test3", 6, "test3", 6);
+
+		ht::insert(htHandle, element);
+		ht::remove(htHandle, element);
+		if(ht::remove(htHandle, element))
+			return false;
+
+		return true;
+	}
 }
