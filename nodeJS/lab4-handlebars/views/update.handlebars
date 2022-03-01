@@ -1,0 +1,15 @@
+<div class="form-part list">
+    <div class="list-container">
+        {{> contactsBtn}}
+    </div>
+    <form id="form-update">
+        <input name="id" value="{{contact.id}}" style="display: none">
+        <input name="fullName" value="{{contact.fullName}}">
+        <input name="phoneNumber" value="{{contact.phoneNumber}}">
+    </form>
+</div>
+<div class="form-part control">
+    <button onclick="update()">Изменить</button>
+    <button onclick="deleteOne()">Удалить</button>
+    <button onclick="{{refuse}}">Отказаться</button>
+</div>
