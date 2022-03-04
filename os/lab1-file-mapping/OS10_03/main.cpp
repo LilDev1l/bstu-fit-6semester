@@ -27,18 +27,6 @@ int main()
 			cout << "-- insert: success" << endl;
 		else
 			throw "-- insert: error";
-
-		ht::Element* hte = ht::get(ht1, new ht::Element("key", 4));
-		if (hte)
-			cout << "-- get: success" << endl;
-		else
-			throw "-- get: error";
-
-		ht::print(hte);
-
-		Sleep(10000);
-
-		cout << "ht1: " << ht1->addr << endl;
 	}
 	catch (const char* msg)
 	{
@@ -52,7 +40,7 @@ int main()
 
 	#pragma region ht2
 
-	/*try
+	try
 	{
 		cout << "\n### ht2 ###" << endl;
 		ht2 = ht::open(L"./files/HTspace.ht");
@@ -61,12 +49,9 @@ int main()
 		else
 			throw "-- create: error";
 
-		if (ht::insert(ht2, new ht::Element("key", 4, "payload", 8)))
-			cout << "-- insert: success" << endl;
-		else
-			throw "-- insert: error";
+		cout << "ht2: " << ht2->addr << endl;
 
-		ht::Element* hte = ht::get(ht2, new ht::Element("key", 4));
+		ht::Element* hte = ht::get(ht1, new ht::Element("key", 4));
 		if (hte)
 			cout << "-- get: success" << endl;
 		else
@@ -80,7 +65,7 @@ int main()
 
 		if (ht1 != nullptr)
 			cout << ht::getLastError(ht1) << endl;
-	}*/
+	}
 
 	#pragma endregion
 

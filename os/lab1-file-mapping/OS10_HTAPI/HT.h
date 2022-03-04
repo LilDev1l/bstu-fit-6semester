@@ -72,7 +72,7 @@ namespace ht    // HT API
 	);	//  == TRUE успешное завершение 
 
 
-	BOOL remove      // удалить элемент в хранилище
+	BOOL removeOne      // удалить элемент в хранилище
 	(
 		HtHandle* htHandle,            // управление HT (ключ)
 		const Element* element              // элемент 

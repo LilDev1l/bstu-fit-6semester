@@ -26,7 +26,7 @@ namespace tests
 		ht::Element* element = new ht::Element("test2", 6, "test2", 6);
 
 		ht::insert(htHandle, element);
-		ht::remove(htHandle, element);
+		ht::removeOne(htHandle, element);
 		if (ht::get(htHandle, element) != NULL)
 			return false;
 
@@ -49,8 +49,8 @@ namespace tests
 		ht::Element* element = new ht::Element("test3", 6, "test3", 6);
 
 		ht::insert(htHandle, element);
-		ht::remove(htHandle, element);
-		if(ht::remove(htHandle, element))
+		ht::removeOne(htHandle, element);
+		if(ht::removeOne(htHandle, element))
 			return false;
 
 		return true;

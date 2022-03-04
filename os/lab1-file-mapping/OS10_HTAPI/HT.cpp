@@ -59,7 +59,7 @@ namespace ht
 			NULL);
 		if (hf == INVALID_HANDLE_VALUE)
 			throw "create or open file failed";
-		
+
 		int sizeMap = sizeof(HtHandle) + getSizeElement(maxKeyLength, maxPayloadLength) * capacity;
 		HANDLE hm = CreateFileMapping(
 			hf,
@@ -104,14 +104,14 @@ namespace ht
 		const wchar_t* fileName)         // имя файла
 	{
 		HtHandle* htHandle = openHtFromFile(fileName);
-		if (htHandle == NULL)
+		if (htHandle)
+			runSnapshotTimer(htHandle);
+		else
 		{
 			htHandle = openHtFromMapName(fileName);
 			if (htHandle == NULL)
 				return NULL;
 		}
-
-		runSnapshotTimer(htHandle);
 
 		return htHandle;
 	}
@@ -124,7 +124,7 @@ namespace ht
 			GENERIC_WRITE | GENERIC_READ,
 			NULL,
 			NULL,
-			OPEN_ALWAYS,
+			OPEN_EXISTING,
 			FILE_ATTRIBUTE_NORMAL,
 			NULL);
 		if (hf == INVALID_HANDLE_VALUE)
@@ -151,6 +151,10 @@ namespace ht
 		htHandle->fileMapping = hm;
 		htHandle->addr = lp;
 		htHandle->lastSnaptime = time(NULL);
+		htHandle->mutex = CreateMutex(
+			NULL,
+			FALSE,
+			fileName);
 
 		return htHandle;
 	}
@@ -204,7 +208,7 @@ namespace ht
 		htHandle->file = NULL;
 		htHandle->fileMapping = hm;
 		htHandle->addr = lp;
-		htHandle->lastSnaptime = time(NULL);
+		htHandle->snapshotTimer = NULL;
 
 		return htHandle;
 	}
@@ -214,7 +218,7 @@ namespace ht
 		htHandle->snapshotTimer = CreateWaitableTimer(0, FALSE, 0);
 		LARGE_INTEGER Li{};
 		Li.QuadPart = -(SECOND * htHandle->secSnapshotInterval);
-		SetWaitableTimer(htHandle->snapshotTimer, &Li, 1, snapAsync, htHandle, FALSE);
+		SetWaitableTimer(htHandle->snapshotTimer, &Li, htHandle->secSnapshotInterval * 1000, snapAsync, htHandle, FALSE);
 
 		return true;
 	}
@@ -224,6 +228,7 @@ namespace ht
 		HtHandle* htHandle,            // управление HT
 		const Element* element)              // элемент 
 	{
+		WaitForSingleObject(htHandle->mutex, INFINITE);
 		int index = findIndex(htHandle, element);
 		if (index < 0)
 		{
@@ -233,6 +238,7 @@ namespace ht
 
 		Element* foundElement = new Element();
 		readFromMemory(htHandle, foundElement, index);
+		ReleaseMutex(htHandle->mutex);
 
 		return foundElement;
 	}
@@ -283,7 +289,7 @@ namespace ht
 		return true;
 	}
 
-	BOOL remove      // удалить элемент в хранилище
+	BOOL removeOne      // удалить элемент в хранилище
 	(
 		HtHandle* htHandle,            // управление HT (ключ)
 		const Element* element)				 // элемент 
@@ -338,16 +344,16 @@ namespace ht
 	{
 		HANDLE hf = htHandle->file;
 		HANDLE hfm = htHandle->fileMapping;
+		HANDLE mutex = htHandle->mutex;
 
-		if (!CancelWaitableTimer(htHandle->snapshotTimer))
-			throw "cancel snapshotTimer failed";
-		if (!UnmapViewOfFile(htHandle->addr))
-			throw "unmapping view failed";
-		if (!CloseHandle(hfm))
-			throw "close File Mapping failed";
-		if(hf != NULL)
-			if (!CloseHandle(hf))
-				throw "close File failed";
+		if (htHandle->snapshotTimer)
+			CancelWaitableTimer(htHandle->snapshotTimer);
+		UnmapViewOfFile(htHandle->addr);
+		CloseHandle(hfm);
+		if (hf)
+			CloseHandle(hf);
+		if (mutex)
+			CloseHandle(mutex);
 
 		return true;
 	}
@@ -374,7 +380,7 @@ namespace ht
 		Element* foundElement = new Element();
 		do
 		{
-			if (index >= htHandle->capacity || 
+			if (index >= htHandle->capacity ||
 				foundElement->key != NULL && memcmp(foundElement->key, element->key, element->keyLength) == NULL)
 			{
 				index = -1;
