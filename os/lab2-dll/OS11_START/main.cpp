@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 	ht::HtHandle* ht = nullptr;
 
 	wchar_t* fileName = getWC(argv[1]);
-	ht = ht::open(fileName);
+	ht = ht::open(fileName, false);
 	if (ht)
 	{
 		cout << "HT-Storage Start" << endl;

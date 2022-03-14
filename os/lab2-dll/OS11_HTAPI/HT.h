@@ -51,7 +51,8 @@ namespace ht    // HT API
 
 	extern "C" OS11_HTAPI_API HtHandle* open     //  открыть HT             
 	(
-		const wchar_t* fileName         // имя файла 
+		const wchar_t* fileName,         // имя файла
+		bool isMapFile = false			// true если открыть fileMapping; false если открыть файл; по умолчанию false
 	); 	// != NULL успешное завершение  
 
 	extern "C" OS11_HTAPI_API BOOL snap         // выполнить Snapshot
