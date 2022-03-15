@@ -15,8 +15,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OS11_03", "OS11_03\OS11_03.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OS11_04", "OS11_04\OS11_04.vcxproj", "{E33CB46F-2652-4ECC-AAE5-66070B42E905}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "check", "check\check.vcxproj", "{2A053F8D-37BE-481B-AB94-7D86010D9904}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -73,14 +71,6 @@ Global
 		{E33CB46F-2652-4ECC-AAE5-66070B42E905}.Release|x64.Build.0 = Release|x64
 		{E33CB46F-2652-4ECC-AAE5-66070B42E905}.Release|x86.ActiveCfg = Release|Win32
 		{E33CB46F-2652-4ECC-AAE5-66070B42E905}.Release|x86.Build.0 = Release|Win32
-		{2A053F8D-37BE-481B-AB94-7D86010D9904}.Debug|x64.ActiveCfg = Debug|x64
-		{2A053F8D-37BE-481B-AB94-7D86010D9904}.Debug|x64.Build.0 = Debug|x64
-		{2A053F8D-37BE-481B-AB94-7D86010D9904}.Debug|x86.ActiveCfg = Debug|Win32
-		{2A053F8D-37BE-481B-AB94-7D86010D9904}.Debug|x86.Build.0 = Debug|Win32
-		{2A053F8D-37BE-481B-AB94-7D86010D9904}.Release|x64.ActiveCfg = Release|x64
-		{2A053F8D-37BE-481B-AB94-7D86010D9904}.Release|x64.Build.0 = Release|x64
-		{2A053F8D-37BE-481B-AB94-7D86010D9904}.Release|x86.ActiveCfg = Release|Win32
-		{2A053F8D-37BE-481B-AB94-7D86010D9904}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
