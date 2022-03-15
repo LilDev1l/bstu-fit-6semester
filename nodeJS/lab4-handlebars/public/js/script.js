@@ -1,6 +1,15 @@
-function add() {
-    const form = document.querySelector('#form-add');
-    const fd = new FormData(form);
+const formAdd = document.querySelector('#form-add');
+const formUpdate = document.querySelector('#form-update');
+const deleteButton = document.querySelector('#delete');
+
+formAdd?.addEventListener('submit', add);
+formUpdate?.addEventListener('submit', update);
+deleteButton?.addEventListener('click', deleteOne);
+
+function add(event) {
+    event.preventDefault();
+
+    const fd = new FormData(formAdd);
 
     fetch('/contacts/add', {
         method: 'POST',
@@ -13,9 +22,10 @@ function add() {
         .then(() => window.location.href = '/contacts');
 }
 
-function update() {
-    const form = document.querySelector('#form-update');
-    const fd = new FormData(form);
+function update(event) {
+    event.preventDefault();
+
+    const fd = new FormData(formUpdate);
 
     fetch(`/contacts/update/${fd.get('id')}`, {
         method: 'PUT',
@@ -28,9 +38,10 @@ function update() {
         .then(() => window.location.href = '/contacts');
 }
 
-function deleteOne() {
-    const form = document.querySelector('#form-update');
-    const fd = new FormData(form);
+function deleteOne(event) {
+    event.preventDefault();
+
+    const fd = new FormData(formUpdate);
 
     fetch(`/contacts/delete/${fd.get('id')}`, {
         method: 'DELETE',
@@ -38,5 +49,9 @@ function deleteOne() {
     })
         .then(() => window.location.href = '/contacts');
 }
+
+
+
+
 
 
