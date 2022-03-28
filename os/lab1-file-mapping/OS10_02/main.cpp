@@ -49,7 +49,7 @@ int main()
 
 		SleepEx(3000, TRUE);
 
-		if (ht::remove(ht, hte))
+		if (ht::removeOne(ht, hte))
 			cout << "-- remove: success" << endl;
 		else
 			throw "-- remove: error";
