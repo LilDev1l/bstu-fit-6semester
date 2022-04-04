@@ -54,7 +54,7 @@ namespace ht
 			GENERIC_WRITE | GENERIC_READ,
 			NULL,
 			NULL,
-			OPEN_ALWAYS,
+			CREATE_ALWAYS,
 			FILE_ATTRIBUTE_NORMAL,
 			NULL);
 		if (hf == INVALID_HANDLE_VALUE)
@@ -101,16 +101,19 @@ namespace ht
 
 	HtHandle* open
 	(
-		const wchar_t* fileName)         // имя файла
+		const wchar_t* fileName,         // имя файла
+		bool isMapFile)					// true если открыть fileMapping; false если открыть файл; по умолчанию false
 	{
-		HtHandle* htHandle = openHtFromFile(fileName);
-		if (htHandle)
-			runSnapshotTimer(htHandle);
-		else
+		HtHandle* htHandle;
+		if (isMapFile) 
 		{
 			htHandle = openHtFromMapName(fileName);
-			if (htHandle == NULL)
-				return NULL;
+		} 
+		else
+		{
+			htHandle = openHtFromFile(fileName);
+			if (htHandle)
+				runSnapshotTimer(htHandle);
 		}
 
 		return htHandle;
@@ -162,11 +165,9 @@ namespace ht
 	HtHandle* openHtFromMapName(
 		const wchar_t* fileName)
 	{
-		HANDLE hm = CreateFileMapping(
-			INVALID_HANDLE_VALUE,
-			NULL,
-			PAGE_READWRITE,
-			0, sizeof(HtHandle),
+		HANDLE hm = OpenFileMapping(
+			FILE_MAP_ALL_ACCESS,
+			false,
 			fileName);
 		if (!hm)
 			return NULL;
@@ -178,32 +179,7 @@ namespace ht
 		if (!lp)
 			return NULL;
 
-		HtHandle* htHandle = (HtHandle*)lp;
-
-		int sizeMapping = sizeof(HtHandle) + getSizeElement(htHandle->maxKeyLength, htHandle->maxPayloadLength) * htHandle->capacity;
-
-		if (!UnmapViewOfFile(lp))
-			return NULL;
-		if (!CloseHandle(hm))
-			return NULL;
-
-		hm = CreateFileMapping(
-			INVALID_HANDLE_VALUE,
-			NULL,
-			PAGE_READWRITE,
-			0, sizeMapping,
-			fileName);
-		if (!hm)
-			return NULL;
-
-		lp = MapViewOfFile(
-			hm,
-			FILE_MAP_ALL_ACCESS,
-			0, 0, 0);
-		if (!lp)
-			return NULL;
-
-		htHandle = new HtHandle();
+		HtHandle* htHandle = new HtHandle();
 		memcpy(htHandle, lp, sizeof(HtHandle));
 		htHandle->file = NULL;
 		htHandle->fileMapping = hm;
