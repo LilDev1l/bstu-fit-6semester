@@ -6,7 +6,7 @@ dotenv.config({
 });
 
 module.exports = {
-    PORT: process.env.PORT,
+    PORT: process.env.PORT || 3000,
     msConfig: {
         database: 'auth',
         username: 'root',
