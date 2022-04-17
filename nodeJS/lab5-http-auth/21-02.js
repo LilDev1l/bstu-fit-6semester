@@ -1,13 +1,10 @@
 const fs = require('fs');
 const express = require('express');
 const passport = require('passport');
+const session = require('express-session');
 const DigestStrategy = require('passport-http').DigestStrategy;
 const {findUser} = require('./utils/auth');
-const session = require('express-session')({
-    resave: false,
-    saveUninitialized: false,
-    secret: '123456789'
-});
+const {PORT} = require('./common/config')
 
 passport.use(new DigestStrategy({qop: 'auth'},(username, done) => {
     const user = findUser(username);
@@ -19,9 +16,12 @@ passport.use(new DigestStrategy({qop: 'auth'},(username, done) => {
 }));
 
 const app = express();
-app.use(session);
 app.use(passport.initialize());
-app.use(passport.session());
+app.use(session({
+    secret: 'cookie_secret',
+    resave: true,
+    saveUninitialized: true
+}));
 
 app.get('/', (req, res) => {
     res.redirect('/login');
@@ -29,18 +29,14 @@ app.get('/', (req, res) => {
 
 app.get('/login',
     (req, res, next) => {
-        console.log('preAuth');
+        console.log('login');
         if (req.session.logout && req.headers['authorization']) {
             req.session.logout = false;
             delete req.headers['authorization'];
         }
         next();
     },
-    passport.authenticate('digest', {session: false}),
-    (req, res) => {
-        console.log('afterAuth');
-        res.redirect('/resource');
-    }
+    passport.authenticate('digest', {session: false, successRedirect: '/resource'}),
 );
 
 app.get('/resource',
@@ -56,9 +52,9 @@ app.get('/logout', (req, res) => {
     res.redirect('/login');
 })
 
-app.use((req, res, next) => {
+app.use((req, res) => {
     res.status(404).send('Not Found');
 })
 
-app.listen(process.env.PORT || 3000, () => console.info(`Server is running on http://localhost:${process.env.PORT || 3000}`));
+app.listen(PORT, () => console.info(`Server is running on http://localhost:${PORT}`));
 
