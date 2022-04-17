@@ -1,0 +1,19 @@
+{
+  "name": "lab7-oauth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/23-01.js",
+  "scripts": {
+    "start": "node src/23-01.js"
+  },
+  "keywords": [],
+  "author": "lilDev1l <lildev1l.ya@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "express-session": "^1.17.2",
+    "passport": "^0.5.2",
+    "passport-google-oauth20": "^2.0.0"
+  }
+}
