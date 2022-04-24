@@ -7,8 +7,8 @@ dotenv.config({
 
 module.exports = {
     PORT: process.env.PORT || 3000,
-    msConfig: {
-        database: 'auth',
+    mySqlConfig: {
+        database: 'lab6_forms_auth',
         username: 'root',
         password: 'root',
         option: {

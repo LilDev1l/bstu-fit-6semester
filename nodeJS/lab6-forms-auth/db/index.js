@@ -1,8 +1,8 @@
 const {Sequelize} = require('sequelize');
-const {msConfig} = require('../common/config');
+const {mySqlConfig} = require('../common/config');
 const models = require('./models/index');
 
-const sequelize = new Sequelize(msConfig.database, msConfig.username, msConfig.password, msConfig.option);
+const sequelize = new Sequelize(...Object.values(mySqlConfig));
 
 for (const key in models) {
     models[key](sequelize);

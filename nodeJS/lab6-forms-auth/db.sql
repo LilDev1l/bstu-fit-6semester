@@ -1,6 +1,6 @@
-create database auth;
+create database lab6_forms_auth;
 
-use auth;
+use lab6_forms_auth;
 create table users (
 	id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(30) NOT NULL UNIQUE,
