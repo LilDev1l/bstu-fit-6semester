@@ -1,2 +1,2 @@
-# bstu-fit-6semestr
+# bstu-fit-6semester
 **look at the branches!**
