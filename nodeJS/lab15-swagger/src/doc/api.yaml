@@ -1,0 +1,151 @@
+openapi: 3.0.0
+
+info:
+  title: Lab31
+  description: Postavte 8
+  version: 1.1.1
+
+servers:
+  - url: /ts
+
+tags:
+  - fullName: contact
+
+components:
+  schemas:
+    Contact:
+      type: object
+      properties:
+        id:
+          type: integer
+        fullName:
+          type: string
+        phoneNumber:
+          type: string
+
+  responses:
+    NotFound:
+      description: Contact not found
+    BadData:
+      description: Bad data
+
+paths:
+  /:
+    get:
+      tags:
+        - contact
+      summary: Get
+      description: Get contact
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contact'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - contact
+      summary: Post.
+      description: Add contact.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              title: example
+              properties:
+                fullName:
+                  type: string
+                  description: fullName
+                phoneNumber:
+                  type: integer
+                  description: phoneNumber
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  fullName:
+                    type: string
+                    description: fullName
+                  phoneNumber:
+                    type: integer
+                    description: phoneNumber
+        '400':
+          $ref: '#/components/responses/BadData'
+
+  /{id}:
+    put:
+      tags:
+        - contact
+      summary: Put
+      description: Edit contact.
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID of the contact to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              title: example
+              properties:
+                fullName:
+                  type: string
+                  description: fullName
+                phoneNumber:
+                  type: integer
+                  description: phoneNumber
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  fullName:
+                    type: string
+                    description: fullName
+                  phoneNumber:
+                    type: integer
+                    description: phoneNumber
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/BadData'
+    delete:
+      tags:
+        - contact
+      summary: Delete
+      description: Delete contact
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required: true
+          description: ID of the contact to delete
+      responses:
+        '204':
+          description: Phone number was deleted.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/BadData'
